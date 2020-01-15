@@ -3,6 +3,7 @@
 #include <kvs/glut/Timer>
 #include <kvs/TimerEventListener>
 #include <kvs/KeyPressEventListener>
+#include <future>
 
 namespace local {
 class Animation {
@@ -11,12 +12,19 @@ public:
 private:
   int nloop = 1;
   int loop_size = 60;
-  std::vector<kvs::ObjectBase*> (*loadFunc)(int);
-  std::vector<kvs::RendererBase*> (*loadRen)();
+  //std::vector<kvs::ObjectBase*> (*loadFunc)(int);
+  std::function<std::vector<kvs::ObjectBase*>(int)> loadFunc;
+
+  //std::vector<kvs::RendererBase*> (*loadRen)();
+  std::function<std::vector<kvs::RendererBase*>()> loadRen;
+
+  std::future<std::vector<kvs::ObjectBase*>> next_object;
+  std::future<std::vector<kvs::ObjectBase*>> prev_object;
+
 public:
   std::vector<int> active_ObjectIDs;
 
-  Animation(kvs::glut::Screen *sc, std::vector<kvs::ObjectBase*> (*func)(int), std::vector<kvs::RendererBase*> (*ren)()): screen(sc), loadFunc(func), loadRen(ren) {
+  Animation(kvs::glut::Screen *sc, std::function<std::vector<kvs::ObjectBase*>(int)> func, std::function<std::vector<kvs::RendererBase*>()> ren): screen(sc), loadFunc(func), loadRen(ren) {
     std::vector<kvs::ObjectBase*> objects = loadFunc(nloop);
     std::vector<kvs::RendererBase*> renderers = loadRen();
     for (int i = 0; i < objects.size(); ++i) {
@@ -27,32 +35,45 @@ public:
         active_ObjectIDs.push_back(screen->registerObject(objects[i]).first);
       }
     }
+    next_object = std::async(std::launch::async, [this] { return loadFunc(next_loop(nloop));});
+    prev_object = std::async(std::launch::async, [this] { return loadFunc(prev_loop(nloop));});
   }
 
+  int prev_loop(int n) {
+    if(n == 1) n = loop_size;
+    else n--;
+    return n;
+  }
+  int next_loop(int n) {
+    if(n == loop_size) n = 1;
+    else n++;
+    return n;
+  }
 
   void prev() {
-    if(nloop == 1) nloop = loop_size;
-    else nloop--;
+    nloop = prev_loop(nloop);
     std::cout << "J:prev " << nloop << std::endl;
-    switchObjects();
+    switchObjects(prev_object.get());
   }
 
   void next() {
-    if(nloop == loop_size) nloop = 1;
-    else nloop++;
+    nloop = next_loop(nloop);
     std::cout << "K:next " << nloop << std::endl;
-    switchObjects();
+    switchObjects(next_object.get());
   }
 
 
-  void switchObjects() {
-    std::vector<kvs::ObjectBase*> objects = loadFunc(nloop);
+  void switchObjects(std::vector<kvs::ObjectBase*> objects) {
     std::vector<kvs::RendererBase*> renderers = loadRen();
     for (int i = 0; i < objects.size(); ++i) {
       screen->scene()->replaceObject(active_ObjectIDs[i], objects[i], true);
       if (renderers[i])
         screen->scene()->replaceRenderer(active_ObjectIDs[i], renderers[i], true);
     }
+
+    next_object = std::async(std::launch::async, [this] { return loadFunc(next_loop(nloop));});
+    prev_object = std::async(std::launch::async, [this] { return loadFunc(prev_loop(nloop));});
+
     screen->redraw();
   }
 };

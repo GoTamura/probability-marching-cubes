@@ -190,7 +190,9 @@ kvs::StructuredVolumeObject *loadData(std::string filename, Parameter p) {
   return vol;
 }
 
-std::vector<kvs::ObjectBase*> loadObjects(int nloops) {
+//std::vector<kvs::ObjectBase*> loadObjects(int nloops) {
+std::function<std::vector<kvs::ObjectBase*>(int)> makeLoadFunction(std::string prob_path, std::string true_path) {
+    return [=](int nloops) {
     //OnlineCovMatrixVolume ocmv(NX-1, NY-1, NZ-1);
     //for (int i = 1; i <= 20; ++i) {
     //  std::stringstream ss;
@@ -218,7 +220,8 @@ std::vector<kvs::ObjectBase*> loadObjects(int nloops) {
     //probability_vol->read("../ensemble-visualization/prob/0100.kvsml");
     
     std::stringstream ss;
-    ss << "/Users/go/Documents/ensemble-visualization/prob/" << std::setw(4) << std::setfill('0') << nloops + 59 << ".kvsml";
+    //ss << "/Users/go/Documents/ensemble-visualization/prob/" << std::setw(4) << std::setfill('0') << nloops + 59 << ".kvsml";
+    ss << prob_path << "/" << std::setw(4) << std::setfill('0') << nloops + 59 << ".kvsml";
     std::cout << ss.str() << std::endl;
 
     probability_vol->read(ss.str());
@@ -236,7 +239,8 @@ std::vector<kvs::ObjectBase*> loadObjects(int nloops) {
     //average_vol->setMinMaxExternalCoords(average_vol->minObjectCoord(), average_vol->maxObjectCoord()*kvs::Vec3(1, 1, 5));
 
     std::stringstream ss2;
-    ss2 << "/Users/go/Documents/prob/true/true2008" << std::setw(4) << std::setfill('0') << nloops + 299 << ".bin";
+    //ss2 << "/Users/go/Documents/prob/true/true2008" << std::setw(4) << std::setfill('0') << nloops + 299 << ".bin";
+    ss2 << true_path << "/true2008" << std::setw(4) << std::setfill('0') << nloops + 299 << ".bin";
     kvs::StructuredVolumeObject* true_vol = loadData(ss2.str(), Parameter::QV);
     std::cout << ss2.str() << std::endl;
     true_vol->setMinMaxExternalCoords(probability_vol->minObjectCoord(), probability_vol->maxObjectCoord()*kvs::Vec3(1, 1, 5));
@@ -257,6 +261,7 @@ std::vector<kvs::ObjectBase*> loadObjects(int nloops) {
     objects.push_back(object);
     objects.push_back(probability_vol);
     return objects;
+    };
 }
 
 std::vector<kvs::RendererBase*> loadRenderer() {
@@ -277,29 +282,22 @@ std::vector<kvs::RendererBase*> loadRenderer() {
     return renderers;
 }
 
-int main( int argc, char** argv )
-{
-
-
+int main( int argc, char** argv ) {
     kvs::glut::Application app( argc, argv );
     kvs::glut::Screen screen( &app );
     screen.setGeometry( 0, 0, 1024, 1024 );
     screen.setTitle( "ProabilityMarchingCubes" );
     screen.create();
-    //screen.paintEvent();
-    //screen.paintEvent();
-    //kvs::ColorImage image = screen.scene()->camera()->snapshot();
-    //image.write("image.bmp");
     screen.show();
 
     //kvs::osmesa::Screen screen;
     //screen.draw();
     //screen.capture().write(argv[2]);
 
-
+    auto loadObjects = makeLoadFunction(argv[1], argv[2]);
     auto anim = local::Animation(&screen, loadObjects, loadRenderer);
 
-    int msec = 200;
+    const int msec = 200;
     kvs::glut::Timer timer(msec);
     timer.stop();
     local::KeyPressEvent key_press_event(&timer, &anim);
