@@ -54,12 +54,14 @@ public:
     nloop = prev_loop(nloop);
     std::cout << "J:prev " << nloop << std::endl;
     switchObjects(prev_object.get());
+    //switchObjects(loadFunc(nloop));
   }
 
   void next() {
     nloop = next_loop(nloop);
     std::cout << "K:next " << nloop << std::endl;
     switchObjects(next_object.get());
+    //switchObjects(loadFunc(nloop));
   }
 
 
@@ -81,37 +83,37 @@ public:
 
 class KeyPressEvent : public kvs::KeyPressEventListener
 {
-  kvs::glut::Timer* m_timer;
-  Animation *_a;
+kvs::glut::Timer* m_timer;
+Animation *_a;
 
 public:
-  KeyPressEvent(kvs::glut::Timer* timer, Animation *a): m_timer(timer), _a(a){
-  }
+KeyPressEvent(kvs::glut::Timer* timer, Animation *a): m_timer(timer), _a(a){
+}
 
-  void update (kvs::KeyEvent* event)
+void update (kvs::KeyEvent* event)
+{
+  switch(event->key())
   {
-    switch(event->key())
-      {
-      case kvs::Key::s:
-	if(m_timer->isStopped()){
-	  m_timer->start();
-	  std::cout << "S: Start" << std::endl;
-	}
-	else{
-	  m_timer->stop();
-	  std::cout << "S: Stop" << std::endl;
-	}
-	break;
-      case kvs::Key::j:
-	_a->prev();
-	break;
-      case kvs::Key::k:
-	_a->next();
-	break;
-      default:
-	break;
+    case kvs::Key::s:
+      if(m_timer->isStopped()){
+        m_timer->start();
+        std::cout << "S: Start" << std::endl;
       }
+      else{
+        m_timer->stop();
+        std::cout << "S: Stop" << std::endl;
+      }
+      break;
+    case kvs::Key::j:
+      _a->prev();
+      break;
+    case kvs::Key::k:
+      _a->next();
+      break;
+    default:
+      break;
   }
+}
 };
 
 class TimerEvent : public kvs::TimerEventListener
