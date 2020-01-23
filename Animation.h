@@ -18,25 +18,30 @@ private:
   //std::vector<kvs::RendererBase*> (*loadRen)();
   std::function<std::vector<kvs::RendererBase*>()> loadRen;
 
-  std::future<std::vector<kvs::ObjectBase*>> next_object;
-  std::future<std::vector<kvs::ObjectBase*>> prev_object;
+  //std::future<std::vector<kvs::ObjectBase*>> next_object;
+  //std::future<std::vector<kvs::ObjectBase*>> prev_object;
 
 public:
   std::vector<int> active_ObjectIDs;
+  std::vector<int> active_RendererIDs;
 
   Animation(kvs::glut::Screen *sc, std::function<std::vector<kvs::ObjectBase*>(int)> func, std::function<std::vector<kvs::RendererBase*>()> ren): screen(sc), loadFunc(func), loadRen(ren) {
     std::vector<kvs::ObjectBase*> objects = loadFunc(nloop);
     std::vector<kvs::RendererBase*> renderers = loadRen();
     for (int i = 0; i < objects.size(); ++i) {
       if (renderers[i]) {
-        active_ObjectIDs.push_back(screen->registerObject(objects[i], renderers[i]).first);
+        auto ids = screen->registerObject(objects[i], renderers[i]);
+        active_ObjectIDs.push_back(ids.first);
+        active_RendererIDs.push_back(ids.second);
       }
       else {
-        active_ObjectIDs.push_back(screen->registerObject(objects[i]).first);
+        auto ids = screen->registerObject(objects[i]);
+        active_ObjectIDs.push_back(ids.first);
+        active_RendererIDs.push_back(ids.second);
       }
     }
-    next_object = std::async(std::launch::async, [this] { return loadFunc(next_loop(nloop));});
-    prev_object = std::async(std::launch::async, [this] { return loadFunc(prev_loop(nloop));});
+    //next_object = std::async(std::launch::async, [this] { return loadFunc(next_loop(nloop));});
+    //prev_object = std::async(std::launch::async, [this] { return loadFunc(prev_loop(nloop));});
   }
 
   int prev_loop(int n) {
@@ -53,15 +58,15 @@ public:
   void prev() {
     nloop = prev_loop(nloop);
     std::cout << "J:prev " << nloop << std::endl;
-    switchObjects(prev_object.get());
-    //switchObjects(loadFunc(nloop));
+    //switchObjects(prev_object.get());
+    switchObjects(loadFunc(nloop));
   }
 
   void next() {
     nloop = next_loop(nloop);
     std::cout << "K:next " << nloop << std::endl;
-    switchObjects(next_object.get());
-    //switchObjects(loadFunc(nloop));
+    //switchObjects(next_object.get());
+    switchObjects(loadFunc(nloop));
   }
 
 
@@ -70,11 +75,11 @@ public:
     for (int i = 0; i < objects.size(); ++i) {
       screen->scene()->replaceObject(active_ObjectIDs[i], objects[i], true);
       if (renderers[i])
-        screen->scene()->replaceRenderer(active_ObjectIDs[i], renderers[i], true);
+        screen->scene()->replaceRenderer(active_RendererIDs[i], renderers[i], true);
     }
 
-    next_object = std::async(std::launch::async, [this] { return loadFunc(next_loop(nloop));});
-    prev_object = std::async(std::launch::async, [this] { return loadFunc(prev_loop(nloop));});
+    //next_object = std::async(std::launch::async, [this] { return loadFunc(next_loop(nloop));});
+    //prev_object = std::async(std::launch::async, [this] { return loadFunc(prev_loop(nloop));});
 
     screen->redraw();
   }
@@ -122,7 +127,7 @@ private:
   Animation *_a;
   void update(kvs::TimeEvent* event)
   {
-    _a->next();
+    //_a->next();
     //_a->screen->redraw();
   }
 public:

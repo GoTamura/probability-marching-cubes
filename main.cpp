@@ -8,6 +8,7 @@
 #include <kvs/StructuredVolumeObject>
 #include <kvs/StructuredVolumeImporter>
 #include <kvs/PolygonObject>
+#include <kvs/Bounds>
 #include <kvs/OrthoSlice>
 #include <kvs/HydrogenVolumeData>
 #include <kvs/ScreenCaptureEvent>
@@ -22,7 +23,8 @@
 #include <fstream>
 #include <iterator>
 #include <vector>
-#include <kvs/RayCastingRenderer>
+//#include <kvs/RayCastingRenderer>
+#include "myRayCastingRendererGLSL.h"
 #include <chrono>
 #include <random>
 #include <functional>
@@ -40,6 +42,8 @@
 #include <kvs/TableObject>
 #include <kvs/Axis2D>
 #include "Animation.h"
+#include "Length.h"
+#include <kvs/ColorMapBar>
 
 kvs::TransferFunction tfunc("./tfunc_20191223_121206.kvsml");
 
@@ -55,7 +59,7 @@ public:
     void apply( void )
     {
         const kvs::RendererBase* base = static_cast<kvs::glut::Screen*>(screen())->scene()->rendererManager()->renderer(renderer_id);
-        kvs::glsl::RayCastingRenderer* renderer = (kvs::glsl::RayCastingRenderer*)base;
+        kvs::glsl::myRayCastingRenderer* renderer = (kvs::glsl::myRayCastingRenderer*)base;
         tfunc = transferFunction();
         renderer->setTransferFunction( transferFunction() );
         screen()->redraw();
@@ -196,7 +200,8 @@ std::function<std::vector<kvs::ObjectBase*>(int)> makeLoadFunction(std::string p
     //OnlineCovMatrixVolume ocmv(NX-1, NY-1, NZ-1);
     //for (int i = 1; i <= 20; ++i) {
     //  std::stringstream ss;
-    //  ss << "/mnt/weather_ensemble/" << std::setw(3) << std::setfill('0') << i << "/gs" << argv[1] << ".bin";
+    //  ss << "../ensemble_data/" << std::setw(3) << std::setfill('0') << i << "/gs" << std::setw(4) << std::setfill('0') << nloops + 59 << ".bin";
+    //  std::cout << ss.str() << std::endl;
  
     //  kvs::StructuredVolumeObject* vol = loadData(ss.str(), Parameter::QV);
     //  ocmv.addArray(vol->values().asValueArray<float>());
@@ -209,6 +214,9 @@ std::function<std::vector<kvs::ObjectBase*>(int)> makeLoadFunction(std::string p
     const float threshold = 0.01;
     //const int samples = 100;
     //kvs::ValueArray<float> prob = ProbabilisticMarchingCubes::calc_pdf(cov_matrix, ave_matrix, threshold, samples);
+    
+    //const kvs::ValueArray<float> length_array = calc_length_volume(average_array, threshold, NX-1, NY-1, NZ-1);
+    //kvs::ValueArray<float> point = calc_point(length_array, prob, NX-1, NY-1, NZ-1);
 
     kvs::StructuredVolumeObject *probability_vol = new kvs::StructuredVolumeObject();
     //probability_vol->setGridTypeToUniform();
@@ -226,6 +234,21 @@ std::function<std::vector<kvs::ObjectBase*>(int)> makeLoadFunction(std::string p
 
     probability_vol->read(ss.str());
     probability_vol->setMinMaxExternalCoords(probability_vol->minObjectCoord(), probability_vol->maxObjectCoord()*kvs::Vec3(1, 1, 5));
+    kvs::ValueArray<float> prob = probability_vol->values().asValueArray<float>();
+    //kvs::ValueArray<float> point = calc_point(length_array, prob, NX-1, NY-1, NZ-1);
+    kvs::StructuredVolumeObject *point_vol = new kvs::StructuredVolumeObject();
+    //point_vol->setGridTypeToUniform();
+    //point_vol->setVeclen(1);
+    //point_vol->setResolution(kvs::Vector3ui(NX-1, NY-1, NZ-1));
+    std::stringstream ss1;
+    ss1 << "./point/" << std::setw(4) << std::setfill('0') << nloops + 59 << ".kvsml";
+    std::cout << ss1.str() << std::endl;
+    //point_vol->setValues(point);
+    //point_vol->write(ss1.str(), false, true);
+    //point_vol->read("./point/0060.kvsml");//ss1.str());
+    //
+    //kvs::ValueArray<float> point = point_vol->values().asValueArray<float>();
+
 
     //kvs::StructuredVolumeObject *average_vol = new kvs::StructuredVolumeObject();
     ////average_vol->setGridTypeToUniform();
@@ -255,19 +278,53 @@ std::function<std::vector<kvs::ObjectBase*>(int)> makeLoadFunction(std::string p
     //    kvsMessageError( "Cannot create a polygon object." );
     //    return( false );
     //}
-    object->setColor(kvs::RGBColor(220, 220, 220));
+    //object->setColor(kvs::RGBColor(220, 220, 220));
+    //object->setColors(point_to_color(point, object->coords(), t, NX-1, NY-1, NZ-1));
+    //object->setColors(point_to_color(probability_vol->values().asValueArray<float>(), object->coords(), t, NX-1, NY-1, NZ-1));
+    object->setColorTypeToVertex();
+
+    //kvs::ValueArray<kvs::UInt8> opacities(object->numberOfVertices());
+    //for (int i = 0; i < object->numberOfVertices(); ++i) {
+    //  opacities[i] = 255;
+    //  auto x = object->coords()[3*i];
+    //  auto y = object->coords()[3*i+1];
+    //  auto z = object->coords()[3*i+2];
+    //  if (!(90 <= x && x <= 210 && 90 <= y && y <= 210)) {
+    //    opacities[i] = 0;
+    //  }
+    //}
+    //object->setOpacities(opacities);
     
     std::vector<kvs::ObjectBase*> objects;
-    objects.push_back(object);
+    auto for_Bounds = new kvs::PolygonObject();
+    for_Bounds->setMinMaxExternalCoords(probability_vol->minExternalCoord(), probability_vol->maxExternalCoord());
+    objects.push_back(for_Bounds);
+    //objects.push_back(object);
     objects.push_back(probability_vol);
     return objects;
     };
 }
 
+kvs::ValueArray<kvs::Real32> makeAlpha() {
+  auto volume = kvs::ValueArray<kvs::Real32>(301 * 301 * 50);
+  for (int i = 0; i < 50; ++i) {
+    for (int j = 0; j < 301; ++j) {
+      for (int k = 0; k < 301; ++k) {
+        volume[i*301*301 + j*301 + k] = 0.0;
+        //if (90 <= j && j <= 210 && 90 <= k && k <= 210)
+          volume[i*301*301 + j*301 + k] = 1.0;
+      }
+    }
+  }
+  return volume;
+}
+
 std::vector<kvs::RendererBase*> loadRenderer() {
-    kvs::glsl::RayCastingRenderer* ren = new kvs::glsl::RayCastingRenderer();
+    kvs::glsl::myRayCastingRenderer* ren = new kvs::glsl::myRayCastingRenderer();
     //kvs::RayCastingRenderer* ren = new kvs::RayCastingRenderer();
     //ren->enableLODControl();
+    auto alpha = makeAlpha();
+    ren->setAlphaTexture(NX, NY, NZ, &alpha);
 
     ren->enableShading();
     //ren->disableShading();
@@ -276,19 +333,25 @@ std::vector<kvs::RendererBase*> loadRenderer() {
     ren->setTransferFunction(tfunc);
 
     std::vector<kvs::RendererBase*> renderers;
-    renderers.push_back(nullptr);
+    renderers.push_back(new kvs::Bounds());
+    //renderers.push_back(nullptr);
     renderers.push_back(ren);
 
     return renderers;
 }
-
 int main( int argc, char** argv ) {
     kvs::glut::Application app( argc, argv );
     kvs::glut::Screen screen( &app );
     screen.setGeometry( 0, 0, 1024, 1024 );
     screen.setTitle( "ProabilityMarchingCubes" );
+    screen.setBackgroundColor(kvs::RGBColor::White());
+    screen.scene()->camera()->setPosition(kvs::Vec3(8,-10,4), kvs::Vec3(0,0,0), kvs::Vec3(0, 0, 1));
     screen.create();
     screen.show();
+    kvs::ColorMapBar color_map_bar(&screen);
+    color_map_bar.setColorMap(tfunc.colorMap());
+    color_map_bar.setRange(0, 1.0);
+    color_map_bar.show();
 
     //kvs::osmesa::Screen screen;
     //screen.draw();
@@ -296,6 +359,10 @@ int main( int argc, char** argv ) {
 
     auto loadObjects = makeLoadFunction(argv[1], argv[2]);
     auto anim = local::Animation(&screen, loadObjects, loadRenderer);
+
+    screen.paintEvent();
+    screen.paintEvent();
+    screen.scene()->camera()->snapshot().write("img1.bmp");
 
     const int msec = 200;
     kvs::glut::Timer timer(msec);
@@ -305,7 +372,7 @@ int main( int argc, char** argv ) {
     screen.addEvent(&key_press_event);
     screen.addTimerEvent(&timer_event, &timer);
 
-    TransferFunctionEditor editor( &screen, anim.active_ObjectIDs[1] );
+    TransferFunctionEditor editor( &screen, anim.active_RendererIDs[1] );
     editor.setTransferFunction(tfunc);
     editor.show();
 

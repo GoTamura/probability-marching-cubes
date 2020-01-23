@@ -176,11 +176,11 @@ void main()
         float tfunc_index = ( scalar - transfer_function.min_value ) * tfunc_scale;
         vec4 c = LookupTexture1D( transfer_function_data, tfunc_index );
 
-        c.a *= LookupTexture3D(alpha_data, volume_index).a;
 
 #if defined( ENABLE_ALPHA_CORRECTION )
         c.a = 1.0 - pow( 1.0 - c.a, dTdt );
 #endif
+        c.a *= LookupTexture3D(alpha_data, volume_index).a;
 
         if ( c.a != 0.0 )
         {
