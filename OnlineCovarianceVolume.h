@@ -4,6 +4,9 @@
 #include <cmath>
 #include <kvs/ValueArray>
 
+#include <string>
+#include <functional>
+
 std::vector<float> cholesky_decomposition(std::vector<float>& cov) {
   int n = 8;
   std::vector<float> l(n*n);
@@ -168,4 +171,27 @@ public:
     return ret;
   }
 };
+
+class OnlineCovMatrixVolumeCalcurator {
+  public: 
+    OnlineCovMatrixVolume *ocmv;
+    std::function<kvs::ValueArray<float>(std::string)> loadFunction;
+
+    OnlineCovMatrixVolumeCalcurator(int x, int y, int z, std::vector<std::string> files, std::function<kvs::ValueArray<float>(std::string)> lf): loadFunction(lf) {
+      this->ocmv = new OnlineCovMatrixVolume(x, y, z);
+      addFiles(files);
+    }
+    void addFile(std::string file) {
+        auto data = loadFunction(file);
+        ocmv->addArray(data);
+        ocmv->addArray(loadFunction(file));
+    }
+
+    void addFiles(std::vector<std::string> files) {
+      for (const auto& file: files) {
+        ocmv->addFile(file);
+      }
+    }
+};
+
 #endif

@@ -25,7 +25,9 @@ kvs::ValueArray<float> ProbabilisticMarchingCubes::calc_pdf(const std::vector<st
   int size = mean.size();
   kvs::ValueArray<float> prob(size);
 
+  #if defined(OMP)
   #pragma omp parallel for
+  #endif
   for (int i = 0; i < size; ++i) {
     int crossings = 0;
     for (int j = 0; j < samples; ++j) {

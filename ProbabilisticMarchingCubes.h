@@ -3,7 +3,10 @@
 #include <vector>
 #include <random>
 #include <kvs/ValueArray>
+
+#if defined(OMP)
 #include <omp.h>
+#endif
 
 class ProbabilisticMarchingCubes {
   static bool crossing(std::vector<float> y, float threshold);
