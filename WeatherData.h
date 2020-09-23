@@ -5,6 +5,7 @@
 #include <kvs/StructuredVolumeObject>
 #include <kvs/ValueArray>
 #include <kvs/Endian>
+#include <algorithm>
 
 class WeatherData {
 public:

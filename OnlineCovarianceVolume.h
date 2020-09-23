@@ -178,7 +178,7 @@ class OnlineCovMatrixVolumeCalcurator {
     std::function<kvs::ValueArray<float>(std::string)> loadFunction;
 
     OnlineCovMatrixVolumeCalcurator(int x, int y, int z, std::vector<std::string> files, std::function<kvs::ValueArray<float>(std::string)> lf): loadFunction(lf) {
-      this->ocmv = new OnlineCovMatrixVolume(x, y, z);
+      ocmv = new OnlineCovMatrixVolume(x, y, z);
       addFiles(files);
     }
     void addFile(std::string file) {
@@ -189,7 +189,9 @@ class OnlineCovMatrixVolumeCalcurator {
 
     void addFiles(std::vector<std::string> files) {
       for (const auto& file: files) {
-        ocmv->addFile(file);
+        auto data = loadFunction(file);
+        ocmv->addArray(data);
+        ocmv->addArray(loadFunction(file));
       }
     }
 };
