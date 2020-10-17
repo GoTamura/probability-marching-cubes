@@ -1,46 +1,49 @@
 #include "WeatherData.h"
 
-kvs::ValueArray<float> WeatherData::loadBinary(std::ifstream &ifs, const int size) {
+kvs::ValueArray<float> WeatherData::loadBinary(std::ifstream &ifs, const int size)
+{
   kvs::ValueArray<float> array(size);
-  ifs.read((char*)array.data(), size*4);
-  
+  ifs.read((char *)array.data(), size * 4);
+
   // convert endian
-  if (kvs::Endian::IsLittle()) {
-    for (auto&& i: array) {
+  if (kvs::Endian::IsLittle())
+  {
+    for (auto &&i : array)
+    {
       kvs::Endian::Swap(&i);
     }
   }
   return array;
 }
 
-kvs::StructuredVolumeObject *WeatherData::loadVolume(std::ifstream &ifs, const int size) {
+void WeatherData::loadVolume(std::ifstream &ifs, const int size, kvs::StructuredVolumeObject &vol)
+{
   kvs::ValueArray<float> binary = loadBinary(ifs, size);
-  
-  kvs::StructuredVolumeObject *vol = new kvs::StructuredVolumeObject();
-  vol->setGridTypeToUniform();
-  vol->setVeclen(1);
-  vol->setResolution(kvs::Vector3ui(NX, NY, NZ));
-  vol->setValues(binary);
-  vol->updateMinMaxValues();
+
+  vol.setGridTypeToUniform();
+  vol.setVeclen(1);
+  vol.setResolution(kvs::Vector3ui(NX, NY, NZ));
+  vol.setValues(binary);
+  vol.updateMinMaxValues();
 
   //vol->setGridTypeToRectilinear();
   //vol->setCoords(coords.clone());
   //vol->updateMinMaxCoords();
-  return vol;
 }
 
-kvs::StructuredVolumeObject *WeatherData::loadWeatherData(std::string filename, Parameter p) {
-  std::ifstream ifs (filename, std::ios::in | std::ios::binary);
-  if (ifs.fail()) {
+int WeatherData::loadWeatherData(std::string filename, Parameter p, kvs::StructuredVolumeObject &vol)
+{
+  std::ifstream ifs(filename, std::ios::in | std::ios::binary);
+  if (ifs.fail())
+  {
     std::cerr << "File not found" << std::endl;
-    return nullptr;
+    return -1;
   }
 
   // 格子点数 * sizeof(float) * 変数の順番
-  ifs.seekg(SIZE*4*p, std::ios_base::beg);
-  kvs::StructuredVolumeObject* vol = loadVolume(ifs, SIZE);
+  ifs.seekg(SIZE * 4 * p, std::ios_base::beg);
+  loadVolume(ifs, SIZE, vol);
   ifs.close();
-  return vol;
 }
 
 //kvs::ValueArray<float> createCoords(int nx, int ny, int nz) {
@@ -99,7 +102,7 @@ kvs::StructuredVolumeObject *WeatherData::loadWeatherData(std::string filename, 
 //  for (int i = 0; i < nz; ++i) {
 //    z[i] /= norm/301.0;
 //  }
-//  
+//
 //  x.insert(x.end(),y.begin(), y.end());
 //  x.insert(x.end(),z.begin(), z.end());
 //  return kvs::ValueArray<float>(x);
