@@ -58,7 +58,7 @@ public:
         }
     }
 
-    RMSECalcurator(int x, int y, int z, kvs::ValueArray<float> _truth, std::vector<std::string> files, std::function<void(const std::string &, kvs::StructuredVolumeObject &)> lf) : loadFunction(lf), RMSE(x * y * z)
+    RMSECalcurator(const int x, const int y, const int z, const kvs::ValueArray<float> &_truth, const std::vector<std::string> &files, std::function<void(const std::string &, kvs::StructuredVolumeObject &)> lf) : loadFunction(lf), RMSE(x * y * z)
     {
         truth = _truth;
         addFiles(files);

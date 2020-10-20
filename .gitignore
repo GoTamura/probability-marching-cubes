@@ -1,0 +1,7 @@
+*.o
+*.obj
+*.exe
+*.dat
+*.kvsml
+Makefile.kvs
+Makefile.vc.kvs

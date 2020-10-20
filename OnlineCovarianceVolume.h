@@ -7,32 +7,7 @@
 #include <string>
 #include <functional>
 
-std::vector<float> cholesky_decomposition(std::vector<float> &cov)
-{
-  int n = 8;
-  std::vector<float> l(n * n);
-  float epsilon = 0.000001;
-  for (int i = 0; i < n; ++i)
-  {
-    for (int k = 0; k < (i + 1); ++k)
-    {
-      double sum = 0;
-      for (int j = 0; j < k; ++j)
-      {
-        sum += l[i * n + j] * l[k * n + j];
-      }
-      if (i == k)
-      {
-        l[i * n + k] = std::sqrt(cov[i * n + i] + epsilon - sum);
-      }
-      else
-      {
-        l[i * n + k] = 1.0 / l[k * n + k] * (cov[i * n + k] - sum);
-      }
-    }
-  }
-  return l;
-}
+std::vector<float> cholesky_decomposition(std::vector<float> &cov);
 
 class OnlineCov
 {
@@ -225,7 +200,7 @@ public:
     addArray(vol.values().asValueArray<float>());
   }
 
-  void addFiles(std::vector<std::string> &files)
+  void addFiles(const std::vector<std::string> &files)
   {
     for (const auto &file : files)
     {
@@ -233,7 +208,7 @@ public:
     }
   }
 
-  OnlineCovMatrixVolumeCalcurator(int x, int y, int z, std::vector<std::string> &files, std::function<void(const std::string&, kvs::StructuredVolumeObject&)> lf) : loadFunction(lf), OnlineCovMatrixVolume(x, y, z)
+  OnlineCovMatrixVolumeCalcurator(int x, int y, int z, const std::vector<std::string> &files, std::function<void(const std::string &, kvs::StructuredVolumeObject &)> lf) : loadFunction(lf), OnlineCovMatrixVolume(x, y, z)
   {
     addFiles(files);
   }
