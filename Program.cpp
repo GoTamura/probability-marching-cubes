@@ -7,14 +7,14 @@ namespace Program1
     {
         return [=](int nloops) {
             auto true_vol = kvs::StructuredVolumeObject();
-            WeatherData::loadWeatherData(truth_filename(true_path, nloops), WeatherData::Parameter::QV, true_vol);
+            WeatherData::loadWeatherData(Tools::truth_filename(true_path, nloops), WeatherData::Parameter::QV, true_vol);
 
-            auto files = sameTime(nloops, ensemble_path);
-            auto rmseCalc = RMSECalcurator(NX, NY, NZ, true_vol.values().asValueArray<float>(), files, loadQV);
+            auto files = Tools::sameTime(nloops, ensemble_path);
+            auto rmseCalc = RMSECalcurator(Tools::NX, Tools::NY, Tools::NZ, true_vol.values().asValueArray<float>(), files, Tools::loadQV);
             auto rmse_vol = new kvs::StructuredVolumeObject();
             rmse_vol->setGridTypeToUniform();
             rmse_vol->setVeclen(1);
-            rmse_vol->setResolution(kvs::Vector3ui(NX, NY, NZ));
+            rmse_vol->setResolution(kvs::Vector3ui(Tools::NX, Tools::NY, Tools::NZ));
             rmse_vol->setValues(rmseCalc.get());
             rmse_vol->updateMinMaxValues();
 

@@ -105,7 +105,9 @@ private:
 public:
   OnlineCovMatrixVolume(int x, int y, int z) : _x(x), _y(y), _z(z)
   {
+    std:: cout << _x << _y << _z << std::endl;
     covVol = std::vector<OnlineCovMatrix>(_x * _y * _z);
+    std:: cout << "vec2" << std::endl;
   }
   void addArray(kvs::ValueArray<float> array)
   {
@@ -208,7 +210,7 @@ public:
     }
   }
 
-  OnlineCovMatrixVolumeCalcurator(int x, int y, int z, const std::vector<std::string> &files, std::function<void(const std::string &, kvs::StructuredVolumeObject &)> lf) : loadFunction(lf), OnlineCovMatrixVolume(x, y, z)
+  OnlineCovMatrixVolumeCalcurator(const int x, const int y, const int z, const std::vector<std::string> &files, std::function<void(const std::string &, kvs::StructuredVolumeObject &)> lf) : loadFunction(lf), OnlineCovMatrixVolume(x, y, z)
   {
     addFiles(files);
   }

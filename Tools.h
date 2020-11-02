@@ -13,6 +13,7 @@
 #include "ProbabilisticMarchingCubes.h"
 #include "Length.h"
 
+namespace Tools {
 static const int NX = 301;
 static const int NY = 301;
 static const int NZ = 50;
@@ -33,3 +34,4 @@ void read_kvsml(std::string file, kvs::StructuredVolumeObject *vol);
 void setVisibleArea(kvs::PolygonObject *object);
 
 kvs::ValueArray<kvs::Real32> makeAlpha();
+}

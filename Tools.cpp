@@ -1,4 +1,5 @@
 #include "Tools.h"
+namespace Tools {
 void loadQV(const std::string &file, kvs::StructuredVolumeObject &vol)
 {
     WeatherData::loadWeatherData(file, WeatherData::Parameter::QV, vol);
@@ -100,4 +101,5 @@ kvs::ValueArray<kvs::Real32> makeAlpha()
         }
     }
     return volume;
+}
 }

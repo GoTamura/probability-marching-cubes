@@ -44,6 +44,7 @@ int WeatherData::loadWeatherData(std::string filename, Parameter p, kvs::Structu
   ifs.seekg(SIZE * 4 * p, std::ios_base::beg);
   loadVolume(ifs, SIZE, vol);
   ifs.close();
+  return 0;
 }
 
 //kvs::ValueArray<float> createCoords(int nx, int ny, int nz) {
