@@ -2,17 +2,18 @@
 
 namespace Program8
 {
-  // calcurate average and output to file
-  // ./command <ensemble directory> <output filename>
+  // calcurate score on isosurface and output to file
+  // ./command <truth directory> <score directory>
   int Program::exec(int argc, char **argv)
   {
-    for (int i = 1; i <= 100; ++i)
+    for (int i = 1; i <= 60; ++i)
     {
       auto true_vol = kvs::StructuredVolumeObject();
       WeatherData::loadWeatherData(argv[1], WeatherData::Parameter::QV, true_vol);
 
       auto score_vol = kvs::StructuredVolumeObject();
-      score_vol.read(argv[2]);
+      // 拡張子を.kvsmlにする必要がある
+      score_vol.read(argv[2] + "score" + std::to_string(i) + ".kvsml");
 
       const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
       const bool d = false;

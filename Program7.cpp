@@ -6,13 +6,13 @@ namespace Program7
   // ./command <ensemble directory> <probability output filename> <score output filename>
   int Program::exec(int argc, char **argv)
   {
-    for (int i = 1; i <= 100; ++i)
+    for (int i = 1; i <= 60; ++i)
     {
       // Calcurate pmc
       kvs::ValueArray<float> prob;
       kvs::ValueArray<float> length_array;
       kvs::ValueArray<float> score;
-      std::string ensemble_path = argv[2];
+      std::string ensemble_path = argv[1];
       //Tools::calc_pmc(i, prob, length_array, score, ensemble_path);
 
       auto files = Tools::sameTime(i, ensemble_path);
@@ -35,7 +35,7 @@ namespace Program7
       prob_vol->setResolution(kvs::Vector3ui(Tools::NX-1, Tools::NY-1, Tools::NZ-1));
       prob_vol->setValues(prob);
       prob_vol->updateMinMaxValues();
-      prob_vol->write(argv[3] + std::to_string(i), false, true);
+      prob_vol->write(argv[2] + std::to_string(i), false, true);
 
       auto score_vol = new kvs::StructuredVolumeObject();
       score_vol->setGridTypeToUniform();
@@ -43,7 +43,7 @@ namespace Program7
       score_vol->setResolution(kvs::Vector3ui(Tools::NX-1, Tools::NY-1, Tools::NZ-1));
       score_vol->setValues(score);
       score_vol->updateMinMaxValues();
-      score_vol->write(argv[4] + std::to_string(i), false, true);
+      score_vol->write(argv[3] + std::to_string(i), false, true);
     }
   }
 } // namespace Program7

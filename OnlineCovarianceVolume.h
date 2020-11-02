@@ -30,7 +30,7 @@ public:
   }
   float covariance()
   {
-    return cov * num / (num - 1);
+    return cov * num / (float)(num - 1);
   }
   float average()
   {
@@ -105,9 +105,7 @@ private:
 public:
   OnlineCovMatrixVolume(int x, int y, int z) : _x(x), _y(y), _z(z)
   {
-    std:: cout << _x << _y << _z << std::endl;
     covVol = std::vector<OnlineCovMatrix>(_x * _y * _z);
-    std:: cout << "vec2" << std::endl;
   }
   void addArray(kvs::ValueArray<float> array)
   {
